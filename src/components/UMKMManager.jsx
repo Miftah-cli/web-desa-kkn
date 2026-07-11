@@ -6,12 +6,15 @@ const emptyForm = {
   alamat: '',
   no_telp: '',
   deskripsi: '',
+  foto: '',
 };
 
 export default function UMKMManager() {
   const [umkmList, setUmkmList] = useState([]);
   const [formData, setFormData] = useState(emptyForm);
   const [editData, setEditData] = useState(emptyForm);
+  const [fotoFile, setFotoFile] = useState(null);
+  const [editFotoFile, setEditFotoFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,7 +30,7 @@ export default function UMKMManager() {
 
     const { data, error } = await supabase
       .from('umkm')
-      .select('id, nama, alamat, no_telp, deskripsi')
+      .select('id, nama, alamat, no_telp, deskripsi, foto')
       .order('id', { ascending: true });
 
     if (error) {
@@ -57,10 +60,44 @@ export default function UMKMManager() {
     }));
   }
 
+  async function uploadFoto(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `umkm-${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from('foto_desa')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('foto_desa').getPublicUrl(fileName);
+
+    return publicUrl;
+  }
+
   async function handleAdd(event) {
     event.preventDefault();
     setSaving(true);
     setError('');
+
+    let fotoUrl = '';
+
+    try {
+      if (fotoFile) {
+        fotoUrl = await uploadFoto(fotoFile);
+      }
+    } catch (uploadError) {
+      setError(uploadError.message);
+      setSaving(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from('umkm')
@@ -69,8 +106,9 @@ export default function UMKMManager() {
         alamat: formData.alamat,
         no_telp: formData.no_telp,
         deskripsi: formData.deskripsi,
+        foto: fotoUrl,
       })
-      .select('id, nama, alamat, no_telp, deskripsi')
+      .select('id, nama, alamat, no_telp, deskripsi, foto')
       .single();
 
     if (error) {
@@ -78,6 +116,7 @@ export default function UMKMManager() {
     } else {
       setUmkmList((currentList) => [...currentList, data]);
       setFormData(emptyForm);
+      setFotoFile(null);
     }
 
     setSaving(false);
@@ -90,17 +129,32 @@ export default function UMKMManager() {
       alamat: row.alamat || '',
       no_telp: row.no_telp || '',
       deskripsi: row.deskripsi || '',
+      foto: row.foto || '',
     });
+    setEditFotoFile(null);
   }
 
   function handleCancelEdit() {
     setEditingId(null);
     setEditData(emptyForm);
+    setEditFotoFile(null);
   }
 
   async function handleUpdate(id) {
     setSaving(true);
     setError('');
+
+    let fotoUrl = editData.foto;
+
+    try {
+      if (editFotoFile) {
+        fotoUrl = await uploadFoto(editFotoFile);
+      }
+    } catch (uploadError) {
+      setError(uploadError.message);
+      setSaving(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from('umkm')
@@ -109,9 +163,10 @@ export default function UMKMManager() {
         alamat: editData.alamat,
         no_telp: editData.no_telp,
         deskripsi: editData.deskripsi,
+        foto: fotoUrl,
       })
       .eq('id', id)
-      .select('id, nama, alamat, no_telp, deskripsi')
+      .select('id, nama, alamat, no_telp, deskripsi, foto')
       .single();
 
     if (error) {
@@ -224,6 +279,18 @@ export default function UMKMManager() {
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
             />
           </label>
+
+          <label className="block md:col-span-2">
+            <span className="text-sm font-medium text-slate-700">Foto</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) =>
+                setFotoFile(event.target.files?.[0] || null)
+              }
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+            />
+          </label>
         </div>
 
         <button
@@ -251,6 +318,14 @@ export default function UMKMManager() {
               >
                 {isEditing ? (
                   <div className="space-y-3">
+                    {editData.foto && (
+                      <img
+                        src={editData.foto}
+                        alt={editData.nama || 'Foto UMKM'}
+                        className="h-28 w-full rounded-md object-cover"
+                      />
+                    )}
+
                     <label className="block">
                       <span className="text-sm font-medium text-slate-700">
                         Nama
@@ -303,6 +378,20 @@ export default function UMKMManager() {
                       />
                     </label>
 
+                    <label className="block">
+                      <span className="text-sm font-medium text-slate-700">
+                        Foto
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) =>
+                          setEditFotoFile(event.target.files?.[0] || null)
+                        }
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                      />
+                    </label>
+
                     <div className="flex flex-wrap gap-2 pt-2">
                       <button
                         type="button"
@@ -324,6 +413,15 @@ export default function UMKMManager() {
                   </div>
                 ) : (
                   <>
+                    <img
+                      src={
+                        row.foto ||
+                        'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=800&q=80'
+                      }
+                      alt={row.nama || 'Foto UMKM'}
+                      className="mb-4 h-36 w-full rounded-md object-cover"
+                    />
+
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">

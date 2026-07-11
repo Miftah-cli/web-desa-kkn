@@ -7,10 +7,12 @@ export default function PengurusManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editingJabatan, setEditingJabatan] = useState(null);
+  const [fotoFile, setFotoFile] = useState(null);
   const [formData, setFormData] = useState({
     nama: '',
     alamat: '',
     no_telp: '',
+    foto: '',
   });
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function PengurusManager() {
 
     const { data, error } = await supabase
       .from('pengurus')
-      .select('jabatan, nama, alamat, no_telp');
+      .select('jabatan, nama, alamat, no_telp, foto');
 
     if (error) {
       setError(error.message);
@@ -40,7 +42,9 @@ export default function PengurusManager() {
       nama: row.nama || '',
       alamat: row.alamat || '',
       no_telp: row.no_telp || '',
+      foto: row.foto || '',
     });
+    setFotoFile(null);
   }
 
   function handleCancel() {
@@ -49,7 +53,9 @@ export default function PengurusManager() {
       nama: '',
       alamat: '',
       no_telp: '',
+      foto: '',
     });
+    setFotoFile(null);
   }
 
   function handleChange(event) {
@@ -61,9 +67,43 @@ export default function PengurusManager() {
     }));
   }
 
+  async function uploadFoto(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `pengurus-${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from('foto_desa')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('foto_desa').getPublicUrl(fileName);
+
+    return publicUrl;
+  }
+
   async function handleSave(jabatan) {
     setSaving(true);
     setError('');
+
+    let fotoUrl = formData.foto;
+
+    try {
+      if (fotoFile) {
+        fotoUrl = await uploadFoto(fotoFile);
+      }
+    } catch (uploadError) {
+      setError(uploadError.message);
+      setSaving(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from('pengurus')
@@ -71,9 +111,10 @@ export default function PengurusManager() {
         nama: formData.nama,
         alamat: formData.alamat,
         no_telp: formData.no_telp,
+        foto: fotoUrl,
       })
       .eq('jabatan', jabatan)
-      .select('jabatan, nama, alamat, no_telp')
+      .select('jabatan, nama, alamat, no_telp, foto')
       .single();
 
     if (error) {
@@ -125,13 +166,20 @@ export default function PengurusManager() {
               className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
             >
               <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Jabatan
-                  </p>
-                  <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                    {row.jabatan}
-                  </h3>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={row.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama || row.jabatan)}&background=e2e8f0&color=334155`}
+                    alt={row.nama || row.jabatan}
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-slate-100"
+                  />
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Jabatan
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                      {row.jabatan}
+                    </h3>
+                  </div>
                 </div>
 
                 {!isEditing && (
@@ -184,6 +232,27 @@ export default function PengurusManager() {
                       onChange={handleChange}
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                     />
+                  </label>
+
+                  <label className="block">
+                    <span className="text-sm font-medium text-slate-700">
+                      Foto Profil
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) =>
+                        setFotoFile(event.target.files?.[0] || null)
+                      }
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                    />
+                    {formData.foto && (
+                      <img
+                        src={formData.foto}
+                        alt="Foto pengurus saat ini"
+                        className="mt-3 h-16 w-16 rounded-full object-cover ring-2 ring-slate-100"
+                      />
+                    )}
                   </label>
 
                   <div className="flex gap-2 pt-2">

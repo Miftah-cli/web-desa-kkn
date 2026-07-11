@@ -9,6 +9,15 @@ const villageStats = [
   { label: 'Batas Selatan', value: 'Area Persawahan' },
 ];
 
+const umkmPlaceholderImage =
+  'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80';
+
+function avatarPlaceholder(name) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || 'Pengurus Desa'
+  )}&background=e2e8f0&color=334155&size=160`;
+}
+
 export default function PublicHome() {
   const [pengurus, setPengurus] = useState([]);
   const [umkm, setUmkm] = useState([]);
@@ -23,11 +32,11 @@ export default function PublicHome() {
       const [pengurusResult, umkmResult] = await Promise.all([
         supabase
           .from('pengurus')
-          .select('jabatan, nama')
+          .select('jabatan, nama, foto')
           .order('jabatan', { ascending: true }),
         supabase
           .from('umkm')
-          .select('id, nama, alamat, no_telp, deskripsi')
+          .select('id, nama, alamat, no_telp, deskripsi, foto')
           .order('id', { ascending: true }),
       ]);
 
@@ -128,14 +137,21 @@ export default function PublicHome() {
               {pengurus.map((row) => (
                 <article
                   key={row.jabatan}
-                  className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+                  className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
                 >
-                  <p className="text-sm font-medium text-emerald-700">
-                    {row.jabatan}
-                  </p>
-                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                    {row.nama || '-'}
-                  </h3>
+                  <img
+                    src={row.foto || avatarPlaceholder(row.nama || row.jabatan)}
+                    alt={row.nama || row.jabatan}
+                    className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-emerald-100"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-700">
+                      {row.jabatan}
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                      {row.nama || '-'}
+                    </h3>
+                  </div>
                 </article>
               ))}
             </div>
@@ -164,27 +180,36 @@ export default function PublicHome() {
               {umkm.map((item) => (
                 <article
                   key={item.id}
-                  className="flex min-h-full flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+                  className="flex min-h-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
                 >
-                  <h3 className="text-xl font-semibold text-slate-900">
-                    {item.nama}
-                  </h3>
-                  <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
-                    {item.deskripsi || 'Deskripsi UMKM belum tersedia.'}
-                  </p>
-                  <div className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-sm">
-                    <p className="text-slate-700">
-                      <span className="font-medium text-slate-900">
-                        Alamat:
-                      </span>{' '}
-                      {item.alamat || '-'}
-                    </p>
-                    <p className="text-slate-700">
-                      <span className="font-medium text-slate-900">
-                        Telepon:
-                      </span>{' '}
-                      {item.no_telp || '-'}
-                    </p>
+                  <div className="flex w-full flex-col">
+                    <img
+                      src={item.foto || umkmPlaceholderImage}
+                      alt={item.nama || 'Foto UMKM'}
+                      className="h-48 w-full object-cover"
+                    />
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-xl font-semibold text-slate-900">
+                        {item.nama}
+                      </h3>
+                      <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
+                        {item.deskripsi || 'Deskripsi UMKM belum tersedia.'}
+                      </p>
+                      <div className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-sm">
+                        <p className="text-slate-700">
+                          <span className="font-medium text-slate-900">
+                            Alamat:
+                          </span>{' '}
+                          {item.alamat || '-'}
+                        </p>
+                        <p className="text-slate-700">
+                          <span className="font-medium text-slate-900">
+                            Telepon:
+                          </span>{' '}
+                          {item.no_telp || '-'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </article>
               ))}
