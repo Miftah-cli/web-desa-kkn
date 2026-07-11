@@ -21,26 +21,26 @@ export default function UMKMManager() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchUMKM();
-  }, []);
+    async function fetchUMKM() {
+      setLoading(true);
+      setError('');
 
-  async function fetchUMKM() {
-    setLoading(true);
-    setError('');
+      const { data, error } = await supabase
+        .from('umkm')
+        .select('id, nama, alamat, no_telp, deskripsi, foto')
+        .order('id', { ascending: true });
 
-    const { data, error } = await supabase
-      .from('umkm')
-      .select('id, nama, alamat, no_telp, deskripsi, foto')
-      .order('id', { ascending: true });
+      if (error) {
+        setError(error.message);
+      } else {
+        setUmkmList(data || []);
+      }
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setUmkmList(data || []);
+      setLoading(false);
     }
 
-    setLoading(false);
-  }
+    fetchUMKM();
+  }, []);
 
   function handleFormChange(event) {
     const { name, value } = event.target;
@@ -62,7 +62,7 @@ export default function UMKMManager() {
 
   async function uploadFoto(file) {
     const fileExt = file.name.split('.').pop();
-    const fileName = `umkm-${Date.now()}.${fileExt}`;
+    const fileName = `umkm-${crypto.randomUUID()}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from('foto_desa')

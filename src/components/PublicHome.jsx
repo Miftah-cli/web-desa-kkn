@@ -5,7 +5,7 @@ import { supabase } from '../utils/supabaseClient';
 const padukuhanStats = [
   { label: 'Jumlah Penduduk', value: '2.450 Jiwa' },
   { label: 'Luas Wilayah', value: '325 Ha' },
-  { label: 'Jumlah RT', value: '6 RT' },
+  { label: 'Jumlah RT', value: '5 RT' },
   { label: 'Potensi Utama', value: 'Padi & Bambu' },
 ];
 
@@ -33,12 +33,22 @@ const localPotentials = [
       'Hamparan sawah, tanaman padi, kebun bambu, dan hasil pertanian warga menjadi kekuatan utama Padukuhan Piji.',
   },
   {
-    title: 'Kesenian Lokal',
+    title: 'Karawitan',
     image:
-      'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=900&auto=format&fit=crop',
     description:
-      'Kesenian tradisional terus dirawat melalui kegiatan warga, latihan kelompok seni, dan agenda budaya padukuhan.',
+      'Karawitan terus dirawat melalui kegiatan warga, latihan kelompok seni, dan agenda budaya padukuhan.',
   },
+];
+
+const jabatanOptions = [
+  'Dukuh',
+  'RW',
+  'RT 01',
+  'RT 02',
+  'RT 03',
+  'RT 04',
+  'RT 05',
 ];
 
 const visionItems = [
@@ -56,6 +66,14 @@ function avatarPlaceholder(name) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name || 'Pengurus Padukuhan Piji'
   )}&background=dcfce7&color=14532d&size=160`;
+}
+
+function isAllowedJabatan(jabatan = '') {
+  return jabatanOptions.includes(jabatan);
+}
+
+function compareJabatan(a, b) {
+  return jabatanOptions.indexOf(a.jabatan) - jabatanOptions.indexOf(b.jabatan);
 }
 
 export default function PublicHome() {
@@ -101,7 +119,11 @@ export default function PublicHome() {
             'Gagal memuat data Padukuhan Piji.'
         );
       } else {
-        setPengurus(pengurusResult.data || []);
+        setPengurus(
+          (pengurusResult.data || [])
+            .filter((row) => isAllowedJabatan(row.jabatan))
+            .sort(compareJabatan)
+        );
         setUmkm(umkmResult.data || []);
       }
 
@@ -263,7 +285,7 @@ export default function PublicHome() {
           <SectionHeader
             eyebrow="Kelembagaan"
             title="Susunan Pengurus Padukuhan Piji"
-            description="Dukuh dan pengurus RT yang mendukung pelayanan serta koordinasi warga Padukuhan Piji."
+            description="Dukuh, RW, dan pengurus RT yang mendukung pelayanan serta koordinasi warga Padukuhan Piji."
           />
 
           {loading ? (

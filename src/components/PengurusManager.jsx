@@ -1,6 +1,43 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
+const jabatanOptions = [
+  'Dukuh',
+  'RW',
+  'RT 01',
+  'RT 02',
+  'RT 03',
+  'RT 04',
+  'RT 05',
+];
+
+function isAllowedJabatan(jabatan = '') {
+  return jabatanOptions.includes(jabatan);
+}
+
+function compareJabatan(a, b) {
+  return jabatanOptions.indexOf(a.jabatan) - jabatanOptions.indexOf(b.jabatan);
+}
+
+function normalizePengurusRows(rows = []) {
+  const rowsByJabatan = new Map(
+    rows
+      .filter((row) => isAllowedJabatan(row.jabatan))
+      .map((row) => [row.jabatan, row])
+  );
+
+  return jabatanOptions.map(
+    (jabatan) =>
+      rowsByJabatan.get(jabatan) || {
+        jabatan,
+        nama: '',
+        alamat: '',
+        no_telp: '',
+        foto: '',
+      }
+  );
+}
+
 export default function PengurusManager() {
   const [pengurus, setPengurus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,25 +53,25 @@ export default function PengurusManager() {
   });
 
   useEffect(() => {
-    fetchPengurus();
-  }, []);
+    async function fetchPengurus() {
+      setLoading(true);
+      setError('');
 
-  async function fetchPengurus() {
-    setLoading(true);
-    setError('');
+      const { data, error } = await supabase
+        .from('pengurus')
+        .select('jabatan, nama, alamat, no_telp, foto');
 
-    const { data, error } = await supabase
-      .from('pengurus')
-      .select('jabatan, nama, alamat, no_telp, foto');
+      if (error) {
+        setError(error.message);
+      } else {
+        setPengurus(normalizePengurusRows(data));
+      }
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setPengurus(data || []);
+      setLoading(false);
     }
 
-    setLoading(false);
-  }
+    fetchPengurus();
+  }, []);
 
   function handleEdit(row) {
     setEditingJabatan(row.jabatan);
@@ -107,13 +144,13 @@ export default function PengurusManager() {
 
     const { data, error } = await supabase
       .from('pengurus')
-      .update({
+      .upsert({
+        jabatan,
         nama: formData.nama,
         alamat: formData.alamat,
         no_telp: formData.no_telp,
         foto: fotoUrl,
       })
-      .eq('jabatan', jabatan)
       .select('jabatan, nama, alamat, no_telp, foto')
       .single();
 
@@ -123,7 +160,7 @@ export default function PengurusManager() {
       setPengurus((currentPengurus) =>
         currentPengurus.map((row) =>
           row.jabatan === jabatan ? data : row
-        )
+        ).sort(compareJabatan)
       );
       handleCancel();
     }
@@ -146,7 +183,7 @@ export default function PengurusManager() {
           Manajemen Pengurus Padukuhan Piji
         </h2>
         <p className="mt-1 text-sm text-green-700">
-          Kelola data Dukuh dan RT Padukuhan Piji.
+          Kelola data Dukuh, RW, dan RT Padukuhan Piji.
         </p>
       </div>
 

@@ -9,6 +9,10 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  function handleClose() {
+    navigate('/');
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
@@ -29,10 +33,29 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-emerald-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-lg border border-green-200 bg-white p-6 shadow-sm shadow-green-900/5">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-green-900">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-title"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
+      <div className="relative w-full max-w-md rounded-lg border border-green-200 bg-emerald-50 p-6 shadow-xl shadow-green-950/20">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute right-4 top-4 rounded-full px-2.5 py-1.5 text-lg font-semibold leading-none text-green-800 transition hover:bg-green-100 hover:text-green-950 focus:outline-none focus:ring-2 focus:ring-green-700/40"
+          aria-label="Tutup login"
+        >
+          X
+        </button>
+
+        <div className="mb-6 pr-10">
+          <h1 id="login-title" className="text-2xl font-semibold text-green-900">
             Admin Padukuhan Piji
           </h1>
           <p className="mt-1 text-sm text-green-700">
@@ -78,12 +101,12 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300"
+            className="w-full rounded-md bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-700/40 focus:ring-offset-2 focus:ring-offset-emerald-50 disabled:cursor-not-allowed disabled:bg-green-300"
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
       </div>
-    </main>
+    </div>
   );
 }

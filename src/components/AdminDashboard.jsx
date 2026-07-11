@@ -17,18 +17,18 @@ export default function AdminDashboard() {
   async function handleLogout() {
     setLoggingOut(true);
     await supabase.auth.signOut();
-    navigate('/');
+    navigate('/', { replace: true });
   }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <aside className="border-b border-slate-200 bg-white shadow-sm lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:border-b-0 lg:border-r">
+      <aside className="border-b border-green-700 bg-green-900 text-white shadow-sm lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:border-b-0 lg:border-r">
         <div className="flex h-full flex-col px-4 py-4 lg:px-6 lg:py-6">
           <div className="mb-4 lg:mb-8">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">
               Admin CMS
             </p>
-            <h1 className="mt-1 text-xl font-bold text-slate-900">
+            <h1 className="mt-1 text-xl font-bold text-white">
               Dashboard Desa
             </h1>
           </div>
@@ -44,8 +44,8 @@ export default function AdminDashboard() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`whitespace-nowrap rounded-md px-4 py-2 text-left text-sm font-medium transition ${
                     isActive
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-green-700 text-white shadow-sm'
+                      : 'text-emerald-100 hover:bg-green-700 hover:text-white'
                   }`}
                 >
                   {tab.label}
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-md border border-emerald-200/50 px-4 py-2 text-sm font-medium text-emerald-50 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loggingOut ? 'Logging out...' : 'Logout'}
             </button>
