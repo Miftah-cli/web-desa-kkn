@@ -29,14 +29,14 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <main className="flex min-h-screen items-center justify-center bg-emerald-50 px-4 py-12">
+      <div className="w-full max-w-md rounded-lg border border-green-200 bg-white p-6 shadow-sm shadow-green-900/5">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Admin Login
+          <h1 className="text-2xl font-semibold text-green-900">
+            Admin Padukuhan Piji
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Masuk untuk mengelola data pengurus.
+          <p className="mt-1 text-sm text-green-700">
+            Masuk untuk mengelola data Padukuhan Piji.
           </p>
         </div>
 
@@ -48,20 +48,20 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
+            <span className="text-sm font-medium text-green-900">Email</span>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
               autoComplete="email"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-600/30"
               placeholder="admin@example.com"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-green-900">
               Password
             </span>
             <input
@@ -70,7 +70,7 @@ export default function Login() {
               onChange={(event) => setPassword(event.target.value)}
               required
               autoComplete="current-password"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-600/30"
               placeholder="Masukkan password"
             />
           </label>
@@ -78,7 +78,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-md bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300"
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>

@@ -133,7 +133,7 @@ export default function PengurusManager() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
+      <div className="rounded-lg border border-green-200 bg-white p-6 text-green-900 shadow-sm">
         Memuat data pengurus...
       </div>
     );
@@ -142,11 +142,11 @@ export default function PengurusManager() {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Manajemen Pengurus
+        <h2 className="text-2xl font-semibold text-green-950">
+          Manajemen Pengurus Padukuhan Piji
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Kelola nama, alamat, dan nomor telepon pengurus desa.
+        <p className="mt-1 text-sm text-green-700">
+          Kelola data Dukuh dan RT Padukuhan Piji.
         </p>
       </div>
 
@@ -163,20 +163,20 @@ export default function PengurusManager() {
           return (
             <article
               key={row.jabatan}
-              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+              className="rounded-lg border border-green-200 bg-white p-5 shadow-sm"
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <img
-                    src={row.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama || row.jabatan)}&background=e2e8f0&color=334155`}
+                    src={row.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama || row.jabatan)}&background=dcfce7&color=14532d`}
                     alt={row.nama || row.jabatan}
-                    className="h-12 w-12 rounded-full object-cover ring-2 ring-slate-100"
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-green-100"
                   />
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-green-700">
                       Jabatan
                     </p>
-                    <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                    <h3 className="mt-1 text-lg font-semibold text-green-950">
                       {row.jabatan}
                     </h3>
                   </div>
@@ -186,7 +186,7 @@ export default function PengurusManager() {
                   <button
                     type="button"
                     onClick={() => handleEdit(row)}
-                    className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                    className="rounded-md bg-green-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-green-800"
                   >
                     Edit
                   </button>
@@ -196,7 +196,7 @@ export default function PengurusManager() {
               {isEditing ? (
                 <div className="space-y-3">
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-green-900">
                       Nama
                     </span>
                     <input
@@ -204,12 +204,12 @@ export default function PengurusManager() {
                       name="nama"
                       value={formData.nama}
                       onChange={handleChange}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                      className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm outline-none focus:border-green-700 focus:ring-2 focus:ring-green-100"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-green-900">
                       Alamat
                     </span>
                     <textarea
@@ -217,12 +217,12 @@ export default function PengurusManager() {
                       value={formData.alamat}
                       onChange={handleChange}
                       rows="3"
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                      className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm outline-none focus:border-green-700 focus:ring-2 focus:ring-green-100"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-green-900">
                       No. Telepon
                     </span>
                     <input
@@ -230,12 +230,12 @@ export default function PengurusManager() {
                       name="no_telp"
                       value={formData.no_telp}
                       onChange={handleChange}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                      className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm outline-none focus:border-green-700 focus:ring-2 focus:ring-green-100"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-green-900">
                       Foto Profil
                     </span>
                     <input
@@ -244,13 +244,13 @@ export default function PengurusManager() {
                       onChange={(event) =>
                         setFotoFile(event.target.files?.[0] || null)
                       }
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+                      className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-900 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-green-900 hover:file:bg-emerald-200"
                     />
                     {formData.foto && (
                       <img
                         src={formData.foto}
                         alt="Foto pengurus saat ini"
-                        className="mt-3 h-16 w-16 rounded-full object-cover ring-2 ring-slate-100"
+                        className="mt-3 h-16 w-16 rounded-full object-cover ring-2 ring-green-100"
                       />
                     )}
                   </label>
@@ -260,7 +260,7 @@ export default function PengurusManager() {
                       type="button"
                       onClick={() => handleSave(row.jabatan)}
                       disabled={saving}
-                      className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                      className="rounded-md bg-green-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300"
                     >
                       {saving ? 'Menyimpan...' : 'Simpan'}
                     </button>
@@ -268,7 +268,7 @@ export default function PengurusManager() {
                       type="button"
                       onClick={handleCancel}
                       disabled={saving}
-                      className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-md border border-green-200 px-3 py-2 text-sm font-medium text-green-800 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Batal
                     </button>
@@ -277,20 +277,20 @@ export default function PengurusManager() {
               ) : (
                 <dl className="space-y-3 text-sm">
                   <div>
-                    <dt className="font-medium text-slate-500">Nama</dt>
-                    <dd className="mt-1 text-slate-900">
+                    <dt className="font-medium text-green-700">Nama</dt>
+                    <dd className="mt-1 text-green-950">
                       {row.nama || '-'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">Alamat</dt>
-                    <dd className="mt-1 text-slate-900">
+                    <dt className="font-medium text-green-700">Alamat</dt>
+                    <dd className="mt-1 text-green-950">
                       {row.alamat || '-'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">No. Telepon</dt>
-                    <dd className="mt-1 text-slate-900">
+                    <dt className="font-medium text-green-700">No. Telepon</dt>
+                    <dd className="mt-1 text-green-950">
                       {row.no_telp || '-'}
                     </dd>
                   </div>
