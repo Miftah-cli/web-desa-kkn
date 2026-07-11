@@ -144,13 +144,16 @@ export default function PengurusManager() {
 
     const { data, error } = await supabase
       .from('pengurus')
-      .upsert({
-        jabatan,
-        nama: formData.nama,
-        alamat: formData.alamat,
-        no_telp: formData.no_telp,
-        foto: fotoUrl,
-      })
+      .upsert(
+        {
+          jabatan,
+          nama: formData.nama,
+          alamat: formData.alamat,
+          no_telp: formData.no_telp,
+          foto: fotoUrl,
+        },
+        { onConflict: 'jabatan' }
+      )
       .select('jabatan, nama, alamat, no_telp, foto')
       .single();
 
