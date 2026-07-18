@@ -298,7 +298,7 @@ export default function UMKMManager() {
 
       <form
         onSubmit={handleAdd}
-        className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+        className="w-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
       >
         <h3 className="text-lg font-semibold text-slate-900">
           Add New UMKM
@@ -357,7 +357,7 @@ export default function UMKMManager() {
         <button
           type="submit"
           disabled={saving}
-          className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="mt-4 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
         >
           {saving ? 'Menyimpan...' : 'Add UMKM'}
         </button>
@@ -375,12 +375,12 @@ export default function UMKMManager() {
             return (
               <article
                 key={row.id}
-                className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+                className="min-w-0 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
               >
                 {isEditing ? (
                   <div className="space-y-3">
                     {editData.foto && (
-                      <div className="flex items-start gap-3">
+                      <div className="flex flex-wrap items-start gap-3">
                         <img
                           src={editData.foto}
                           alt={editData.nama || 'Foto UMKM'}
@@ -480,14 +480,14 @@ export default function UMKMManager() {
                       className="mb-4 h-36 w-full rounded-md object-cover"
                     />
 
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-lg font-semibold text-slate-900">
                           {row.nama}
                         </h3>
                       </div>
 
-                      <div className="flex shrink-0 gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => handleEdit(row)}
@@ -509,7 +509,7 @@ export default function UMKMManager() {
                     <dl className="mt-4 space-y-3 text-sm">
                       <div>
                         <dt className="font-medium text-slate-500">Alamat</dt>
-                        <dd className="mt-1 text-slate-900">
+                        <dd className="mt-1 break-words text-slate-900">
                           {row.alamat || '-'}
                         </dd>
                       </div>
@@ -517,7 +517,7 @@ export default function UMKMManager() {
                         <dt className="font-medium text-slate-500">
                           Deskripsi
                         </dt>
-                        <dd className="mt-1 text-slate-900">
+                        <dd className="mt-1 break-words text-slate-900">
                           {row.deskripsi || '-'}
                         </dd>
                       </div>

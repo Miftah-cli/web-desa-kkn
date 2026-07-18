@@ -263,20 +263,20 @@ export default function PengurusManager() {
           return (
             <article
               key={row.jabatan}
-              className="rounded-lg border border-green-200 bg-white p-5 shadow-sm"
+              className="min-w-0 rounded-lg border border-green-200 bg-white p-5 shadow-sm"
             >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <img
                     src={row.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.nama || row.jabatan)}&background=dcfce7&color=14532d`}
                     alt={row.nama || row.jabatan}
                     className="h-12 w-12 rounded-full object-cover ring-2 ring-green-100"
                   />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium uppercase tracking-wide text-green-700">
                       Jabatan
                     </p>
-                    <h3 className="mt-1 text-lg font-semibold text-green-950">
+                    <h3 className="mt-1 truncate text-lg font-semibold text-green-950">
                       {row.jabatan}
                     </h3>
                   </div>
@@ -352,7 +352,7 @@ export default function PengurusManager() {
                     )}
                   </label>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <button
                       type="button"
                       onClick={() => handleSave(row.jabatan)}
@@ -375,13 +375,13 @@ export default function PengurusManager() {
                 <dl className="space-y-3 text-sm">
                   <div>
                     <dt className="font-medium text-green-700">Nama</dt>
-                    <dd className="mt-1 text-green-950">
+                    <dd className="mt-1 break-words text-green-950">
                       {row.nama || '-'}
                     </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-green-700">Alamat</dt>
-                    <dd className="mt-1 text-green-950">
+                    <dd className="mt-1 break-words text-green-950">
                       {row.alamat || '-'}
                     </dd>
                   </div>

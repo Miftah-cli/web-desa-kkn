@@ -110,7 +110,7 @@ export default function ProfilManager() {
 
       <form
         onSubmit={handleSubmit}
-        className="max-w-2xl rounded-lg border border-green-200 bg-white p-5 shadow-sm"
+        className="w-full max-w-2xl rounded-lg border border-green-200 bg-white p-5 shadow-sm"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
@@ -145,7 +145,7 @@ export default function ProfilManager() {
         <button
           type="submit"
           disabled={saving}
-          className="mt-5 rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300"
+          className="mt-5 w-full rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300 sm:w-auto"
         >
           {saving ? 'Menyimpan...' : 'Simpan'}
         </button>
