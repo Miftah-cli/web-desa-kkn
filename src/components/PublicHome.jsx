@@ -58,7 +58,7 @@ const bottomNavLinks = [
   },
 ];
 
-const heroImage = '/piji1.png';
+const heroImage = '/piji1.webp';
 const bottomNavSectionIds = bottomNavLinks
   .map((link) => link.sectionId)
   .filter(Boolean);
@@ -69,13 +69,13 @@ const umkmPlaceholderImage =
 const localPotentials = [
   {
     title: 'Hasil Bumi',
-    image: '/hasilbumi.png',
+    image: '/hasilbumi.webp',
     description:
       'Hamparan sawah, tanaman padi, kebun bambu, dan hasil pertanian warga menjadi kekuatan utama Padukuhan Piji.',
   },
   {
     title: 'Karawitan',
-    image: '/karawitan.jpg',
+    image: '/karawitan.webp',
     description:
       'Karawitan terus dirawat melalui kegiatan warga, latihan kelompok seni, dan agenda budaya padukuhan.',
   },

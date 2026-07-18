@@ -4,25 +4,25 @@ import { Link } from 'react-router-dom';
 const layananItems = [
   {
     title: 'KTP Elektronik (e-KTP)',
-    image: '/poster/ektp.jpeg',
+    image: '/poster/ektp.webp',
     requirements:
       'Biaya GRATIS! Syarat Utama: Berusia 17 tahun/sudah menikah, fotocopy KK, mengisi formulir permohonan, rekam biometrik di Disdukcapil (tidak dapat diwakilkan). Jika Hilang/Rusak: Surat Kehilangan dari Kepolisian & fotocopy KK.',
   },
   {
     title: 'Kartu Keluarga (KK)',
-    image: '/poster/kk.jpeg',
+    image: '/poster/kk.webp',
     requirements:
       'Syarat sementara: fotocopy KTP anggota keluarga, KK lama, surat pengantar RT/RW, dan dokumen pendukung perubahan data seperti akta kelahiran, buku nikah, atau surat pindah jika diperlukan.',
   },
   {
     title: 'Surat Keterangan Domisili',
-    image: '/poster/domisili.jpeg',
+    image: '/poster/domisili.webp',
     requirements:
       'Syarat sementara: fotocopy KTP, fotocopy KK, surat pengantar RT/RW, pas foto bila diperlukan, serta keterangan alamat domisili lengkap sesuai kondisi tempat tinggal.',
   },
   {
     title: 'Akta Kelahiran',
-    image: '/poster/akta.jpeg',
+    image: '/poster/akta.webp',
     requirements:
       'Syarat sementara: Surat keterangan lahir, fotocopy KK, fotocopy KTP orang tua, fotocopy buku nikah/akta perkawinan orang tua, dan data saksi sesuai ketentuan administrasi yang berlaku.',
   },
@@ -110,15 +110,19 @@ export default function Layanan() {
         </div>
       </header>
 
-      <section className="bg-green-950 px-6 py-16 text-white md:py-20">
-        <div className="mx-auto max-w-6xl">
+      <section
+        className="relative flex h-80 flex-col items-center justify-center bg-cover bg-center px-6 text-center text-white"
+        style={{ backgroundImage: "url('/piji2.webp')" }}
+      >
+        <div className="absolute inset-0 bg-green-900/70" />
+        <div className="relative z-10 mx-auto max-w-6xl">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-200">
             Informasi Pelayanan
           </p>
           <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">
             Layanan Administrasi Padukuhan
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-green-50 md:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-green-50 md:text-lg">
             Panduan ringkas persyaratan dokumen administrasi warga Padukuhan
             Piji.
           </p>
