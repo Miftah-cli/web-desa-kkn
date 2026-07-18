@@ -9,7 +9,8 @@ const staticPadukuhanStats = [
 
 const navLinks = [
   { href: '#beranda', label: 'Beranda' },
-  { href: '#visi-misi', label: 'Visi Misi' },
+  { to: '/layanan', label: 'Layanan' },
+  { href: '#profil', label: 'Profil' },
   { href: '#pengurus', label: 'Pengurus' },
   { href: '#umkm', label: 'UMKM' },
   { href: '#potensi-lokal', label: 'Potensi' },
@@ -21,6 +22,13 @@ const bottomNavLinks = [
     label: 'Beranda',
     icon: (
       <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5Z" />
+    ),
+  },
+  {
+    to: '/layanan',
+    label: 'Layanan',
+    icon: (
+      <path d="M6 3h9l3 3v15H6V3ZM14 3v4h4M9 12h6M9 16h6" />
     ),
   },
   {
@@ -244,13 +252,23 @@ export default function PublicHome() {
 
           <nav className="flex gap-1 overflow-x-auto">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-green-50 transition hover:bg-green-800 hover:text-white"
-              >
-                {link.label}
-              </a>
+              link.to ? (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-green-50 transition hover:bg-green-800 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-green-50 transition hover:bg-green-800 hover:text-white"
+                >
+                  {link.label}
+                </a>
+              )
             ))}
           </nav>
         </div>
@@ -524,32 +542,50 @@ export default function PublicHome() {
       </footer>
 
       <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white shadow-lg md:hidden">
-        <div className="grid h-16 grid-cols-4">
+        <div className="grid h-16 grid-cols-5">
           {bottomNavLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="flex flex-col items-center justify-center gap-1 text-xs font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
-              aria-label={link.label}
-            >
-              <svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+            link.to ? (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+                aria-label={link.label}
               >
-                {link.icon}
-              </svg>
-              <span>{link.label}</span>
-            </a>
+                <BottomNavIcon>{link.icon}</BottomNavIcon>
+                <span>{link.label}</span>
+              </Link>
+            ) : (
+              <a
+                key={link.href}
+                href={link.href}
+                className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+                aria-label={link.label}
+              >
+                <BottomNavIcon>{link.icon}</BottomNavIcon>
+                <span>{link.label}</span>
+              </a>
+            )
           ))}
         </div>
       </nav>
     </main>
+  );
+}
+
+function BottomNavIcon({ children }) {
+  return (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
   );
 }
 
