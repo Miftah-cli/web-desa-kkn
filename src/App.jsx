@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AdminDashboard from './components/AdminDashboard';
+import Footer from './components/Footer';
 import Layanan from './components/Layanan';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -35,6 +36,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
+      <Footer />
     </BrowserRouter>
   );
 }

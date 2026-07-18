@@ -577,16 +577,6 @@ export default function PublicHome() {
         </div>
       </section>
 
-      <footer className="border-t border-green-800 bg-green-950 px-6 py-8 text-center">
-        <p className="text-sm text-emerald-100">Website Resmi Padukuhan Piji</p>
-        <Link
-          to="/login"
-          className="mt-2 inline-block text-xs font-medium text-green-400 transition hover:text-emerald-100"
-        >
-          Admin Login
-        </Link>
-      </footer>
-
       <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white shadow-lg md:hidden">
         <div className="grid h-16 grid-cols-5">
           {bottomNavLinks.map((link) => {
