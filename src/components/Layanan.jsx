@@ -6,25 +6,25 @@ const layananItems = [
     title: 'KTP Elektronik (e-KTP)',
     image: '/poster/ektp.jpeg',
     requirements:
-      'Biaya GRATIS! Syarat Utama: Berusia 17 tahun/sudah menikah, FC KK, mengisi formulir permohonan, rekam biometrik di Disdukcapil (tidak dapat diwakilkan). Jika Hilang/Rusak: Surat Kehilangan dari Kepolisian & FC KK.',
+      'Biaya GRATIS! Syarat Utama: Berusia 17 tahun/sudah menikah, fotocopy KK, mengisi formulir permohonan, rekam biometrik di Disdukcapil (tidak dapat diwakilkan). Jika Hilang/Rusak: Surat Kehilangan dari Kepolisian & fotocopy KK.',
   },
   {
     title: 'Kartu Keluarga (KK)',
     image: '/poster/kk.jpeg',
     requirements:
-      'Syarat sementara: FC KTP anggota keluarga, KK lama, surat pengantar RT/RW, dan dokumen pendukung perubahan data seperti akta kelahiran, buku nikah, atau surat pindah jika diperlukan.',
+      'Syarat sementara: fotocopy KTP anggota keluarga, KK lama, surat pengantar RT/RW, dan dokumen pendukung perubahan data seperti akta kelahiran, buku nikah, atau surat pindah jika diperlukan.',
   },
   {
     title: 'Surat Keterangan Domisili',
     image: '/poster/domisili.jpeg',
     requirements:
-      'Syarat sementara: FC KTP, FC KK, surat pengantar RT/RW, pas foto bila diperlukan, serta keterangan alamat domisili lengkap sesuai kondisi tempat tinggal.',
+      'Syarat sementara: fotocopy KTP, fotocopy KK, surat pengantar RT/RW, pas foto bila diperlukan, serta keterangan alamat domisili lengkap sesuai kondisi tempat tinggal.',
   },
   {
     title: 'Akta Kelahiran',
     image: '/poster/akta.jpeg',
     requirements:
-      'Syarat sementara: Surat keterangan lahir, FC KK, FC KTP orang tua, FC buku nikah/akta perkawinan orang tua, dan data saksi sesuai ketentuan administrasi yang berlaku.',
+      'Syarat sementara: Surat keterangan lahir, fotocopy KK, fotocopy KTP orang tua, fotocopy buku nikah/akta perkawinan orang tua, dan data saksi sesuai ketentuan administrasi yang berlaku.',
   },
 ];
 
