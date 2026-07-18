@@ -1,25 +1,21 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
-const padukuhanStats = [
-  { label: 'Jumlah Penduduk', value: '2.450 Jiwa' },
-  { label: 'Luas Wilayah', value: '325 Ha' },
+const staticPadukuhanStats = [
   { label: 'Jumlah RT', value: '5 RT' },
   { label: 'Potensi Utama', value: 'Padi & Bambu' },
 ];
 
 const navLinks = [
   { href: '#beranda', label: 'Beranda' },
-  { href: '#sejarah', label: 'Sejarah' },
   { href: '#visi-misi', label: 'Visi Misi' },
   { href: '#pengurus', label: 'Pengurus' },
   { href: '#umkm', label: 'UMKM' },
   { href: '#potensi-lokal', label: 'Potensi' },
 ];
 
-const heroImage =
-  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=80';
+const heroImage = '/piji1.png';
 
 const umkmPlaceholderImage =
   'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80';
@@ -27,15 +23,13 @@ const umkmPlaceholderImage =
 const localPotentials = [
   {
     title: 'Hasil Bumi',
-    image:
-      'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=900&q=80',
+    image: '/hasilbumi.png',
     description:
       'Hamparan sawah, tanaman padi, kebun bambu, dan hasil pertanian warga menjadi kekuatan utama Padukuhan Piji.',
   },
   {
     title: 'Karawitan',
-    image:
-      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=900&auto=format&fit=crop',
+    image: '/karawitan.jpg',
     description:
       'Karawitan terus dirawat melalui kegiatan warga, latihan kelompok seni, dan agenda budaya padukuhan.',
   },
@@ -68,23 +62,86 @@ function avatarPlaceholder(name) {
   )}&background=dcfce7&color=14532d&size=160`;
 }
 
+function normalizeJabatan(jabatan = '') {
+  const cleanedJabatan = jabatan.trim().toUpperCase();
+
+  if (cleanedJabatan === 'DUKUH') {
+    return 'Dukuh';
+  }
+
+  if (cleanedJabatan === 'RW') {
+    return 'RW';
+  }
+
+  const rtMatch = cleanedJabatan.match(/^RT\s*0?([1-5])$/);
+
+  if (rtMatch) {
+    return `RT 0${rtMatch[1]}`;
+  }
+
+  return jabatan.trim();
+}
+
 function isAllowedJabatan(jabatan = '') {
-  return jabatanOptions.includes(jabatan);
+  return jabatanOptions.includes(normalizeJabatan(jabatan));
 }
 
 function compareJabatan(a, b) {
   return jabatanOptions.indexOf(a.jabatan) - jabatanOptions.indexOf(b.jabatan);
 }
 
+function normalizePengurusRows(rows = []) {
+  const rowsByJabatan = new Map();
+
+  rows.forEach((row) => {
+    const jabatan = normalizeJabatan(row.jabatan);
+
+    if (isAllowedJabatan(jabatan) && !rowsByJabatan.has(jabatan)) {
+      rowsByJabatan.set(jabatan, { ...row, jabatan });
+    }
+  });
+
+  return jabatanOptions
+    .map((jabatan) => rowsByJabatan.get(jabatan) || { jabatan, nama: '', foto: null })
+    .sort(compareJabatan);
+}
+
 export default function PublicHome() {
   const [pengurus, setPengurus] = useState([]);
   const [umkm, setUmkm] = useState([]);
+  const [profilDesa, setProfilDesa] = useState({
+    jumlah_jiwa: '',
+    luas_wilayah: '',
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAllPengurus, setShowAllPengurus] = useState(false);
+  const [profileError, setProfileError] = useState('');
   const [showAllUmkm, setShowAllUmkm] = useState(false);
 
-  const visiblePengurus = showAllPengurus ? pengurus : pengurus.slice(0, 5);
+  const jumlahJiwaValue = profileError
+    ? 'Gagal memuat'
+    : `± ${profilDesa.jumlah_jiwa || '-'} Jiwa`;
+  const luasWilayahValue = profileError
+    ? 'Gagal memuat'
+    : `± ${profilDesa.luas_wilayah || '-'} Ha`;
+  const padukuhanStats = [
+    {
+      label: 'Data Penduduk',
+      value: loading ? 'Memuat...' : jumlahJiwaValue,
+    },
+    {
+      label: 'Luas Wilayah',
+      value: loading ? 'Memuat...' : luasWilayahValue,
+    },
+    ...staticPadukuhanStats,
+  ];
+
+  const pimpinanPengurus = pengurus.filter((row) =>
+    ['Dukuh', 'RW'].includes(row.jabatan)
+  );
+  const rtPengurus = pengurus.filter((row) =>
+    row.jabatan.startsWith('RT')
+  );
   const visibleUmkm = showAllUmkm ? umkm : umkm.slice(0, 5);
 
   useEffect(() => {
@@ -100,16 +157,22 @@ export default function PublicHome() {
     async function fetchPublicData() {
       setLoading(true);
       setError('');
+      setProfileError('');
 
-      const [pengurusResult, umkmResult] = await Promise.all([
+      const [pengurusResult, umkmResult, profilResult] = await Promise.all([
         supabase
           .from('pengurus')
           .select('jabatan, nama, foto')
           .order('jabatan', { ascending: true }),
         supabase
           .from('umkm')
-          .select('id, nama, alamat, no_telp, deskripsi, foto')
+          .select('id, nama, alamat, deskripsi, foto')
           .order('id', { ascending: true }),
+        supabase
+          .from('profil_desa')
+          .select('jumlah_jiwa, luas_wilayah')
+          .eq('id', 1)
+          .single(),
       ]);
 
       if (pengurusResult.error || umkmResult.error) {
@@ -120,11 +183,18 @@ export default function PublicHome() {
         );
       } else {
         setPengurus(
-          (pengurusResult.data || [])
-            .filter((row) => isAllowedJabatan(row.jabatan))
-            .sort(compareJabatan)
+          normalizePengurusRows(pengurusResult.data)
         );
         setUmkm(umkmResult.data || []);
+      }
+
+      if (profilResult.error) {
+        setProfileError(profilResult.error.message);
+      } else {
+        setProfilDesa({
+          jumlah_jiwa: profilResult.data?.jumlah_jiwa || '',
+          luas_wilayah: profilResult.data?.luas_wilayah || '',
+        });
       }
 
       setLoading(false);
@@ -168,10 +238,10 @@ export default function PublicHome() {
         <div className="relative mx-auto w-full max-w-6xl">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-200">
-              Selamat Datang di Website Resmi
+              Selamat Datang di Website
             </p>
             <h1 className="mt-5 text-4xl font-bold tracking-tight md:text-6xl">
-              Padukuhan Piji yang Asri, Guyub, dan Berdaya
+              Padukuhan Piji
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-green-50 md:text-lg">
               Mengenal lebih dekat Padukuhan Piji melalui sejarah, visi misi,
@@ -197,19 +267,25 @@ export default function PublicHome() {
 
       <section id="sejarah" className="scroll-mt-24 bg-emerald-50 px-6 py-20">
         <div className="mx-auto max-w-6xl">
-          <SectionHeader
-            eyebrow="Sejarah"
-            title="Sejarah Padukuhan Piji"
-            description="Kisah singkat tentang akar kehidupan masyarakat dan lingkungan Padukuhan Piji."
-          />
-          <div className="mt-8 rounded-lg border border-green-200 bg-white p-6 shadow-sm">
-            <p className="text-sm leading-7 text-green-900">
-              Padukuhan Piji tumbuh dari kehidupan masyarakat yang dekat dengan
-              sawah, kebun, rumpun bambu, dan tradisi gotong royong. Dari waktu
-              ke waktu, warga menjaga hubungan sosial, merawat lingkungan, dan
-              mengembangkan potensi lokal sebagai bekal membangun padukuhan yang
-              lebih mandiri dan lestari.
-            </p>
+          <div className="rounded-lg border border-green-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="border-l-4 border-green-700 bg-green-50/30 py-2 pl-5 rounded-r-lg">
+              <p className="mb-4 text-xl font-medium leading-relaxed text-gray-900 md:text-2xl">
+                Padukuhan Piji merupakan wilayah yang dianugerahi kekayaan alam
+                dan ikatan sosial yang erat. Kehidupan ekonomi masyarakatnya
+                berputar harmonis melalui sektor pertanian, peternakan, serta
+                industri kreatif unggulan seperti mebel, olahan pangan, dan
+                anyaman bambu yang telah diwariskan turun-temurun sejak era
+                Simbah Teguh.
+              </p>
+              <p className="text-base leading-relaxed text-gray-700 md:text-lg">
+                Selain budaya gotong royong yang kental dalam kegiatan
+                sehari-hari, Padukuhan Piji juga memiliki jejak sejarah yang
+                terus dirawat kelestariannya. Salah satu daya tarik historisnya
+                adalah situs "Migit Mertelu", sebuah kawasan bersejarah yang
+                menurut cerita leluhur pada masa lampau hanya bisa dihuni oleh
+                tiga bangunan rumah.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -248,7 +324,6 @@ export default function PublicHome() {
             <SectionHeader
               eyebrow="Profil"
               title="Mengenal Padukuhan Piji"
-              description="Gambaran ringkas kondisi wilayah, masyarakat, dan potensi utama Padukuhan Piji."
             />
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -271,10 +346,11 @@ export default function PublicHome() {
           <div className="overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm">
             <iframe
               title="Lokasi Padukuhan Piji"
-              src="https://www.google.com/maps?q=Indonesia&output=embed"
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d19659.95824474363!2d110.59793905696952!3d-7.834408262319754!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a4ed09a2a5733%3A0xe2da0ee78a1189f7!2sPiji%2C%20Mertelu%2C%20Gedang%20Sari%2C%20Gunungkidul%20Regency%2C%20Special%20Region%20of%20Yogyakarta!5e1!3m2!1sen!2sid!4v1784371262415!5m2!1sen!2sid"
               className="h-[420px] w-full"
+              allowFullScreen=""
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         </div>
@@ -294,33 +370,19 @@ export default function PublicHome() {
             <ErrorState message={error} />
           ) : (
             <>
-              <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {visiblePengurus.map((row) => (
-                  <article
-                    key={row.jabatan}
-                    className="rounded-lg border border-green-200 bg-emerald-50 p-5 text-center shadow-sm"
-                  >
-                    <img
-                      src={row.foto || avatarPlaceholder(row.nama || row.jabatan)}
-                      alt={row.nama || row.jabatan}
-                      className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-green-200"
-                    />
-                    <p className="mt-5 text-sm font-medium text-green-700">
-                      {row.jabatan}
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-green-950">
-                      {row.nama || '-'}
-                    </h3>
-                  </article>
-                ))}
-              </div>
+              <div className="mt-10 space-y-6">
+                <div className="flex flex-wrap justify-center gap-5">
+                  {pimpinanPengurus.map((row) => (
+                    <PengurusCard key={row.jabatan} row={row} />
+                  ))}
+                </div>
 
-              {pengurus.length > 5 && (
-                <ShowMoreButton
-                  expanded={showAllPengurus}
-                  onClick={() => setShowAllPengurus((current) => !current)}
-                />
-              )}
+                <div className="flex flex-wrap justify-center gap-5">
+                  {rtPengurus.map((row) => (
+                    <PengurusCard key={row.jabatan} row={row} />
+                  ))}
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -359,18 +421,12 @@ export default function PublicHome() {
                         <p className="mt-3 flex-1 text-sm leading-6 text-green-900">
                           {item.deskripsi || 'Deskripsi UMKM belum tersedia.'}
                         </p>
-                        <div className="mt-5 space-y-2 border-t border-green-100 pt-4 text-sm">
+                        <div className="mt-5 border-t border-green-100 pt-4 text-sm">
                           <p className="text-green-900">
                             <span className="font-medium text-green-950">
                               Alamat:
                             </span>{' '}
                             {item.alamat || '-'}
-                          </p>
-                          <p className="text-green-900">
-                            <span className="font-medium text-green-950">
-                              Telepon:
-                            </span>{' '}
-                            {item.no_telp || '-'}
                           </p>
                         </div>
                       </div>
@@ -436,6 +492,24 @@ export default function PublicHome() {
         </Link>
       </footer>
     </main>
+  );
+}
+
+function PengurusCard({ row }) {
+  return (
+    <article className="w-full max-w-[220px] rounded-lg border border-green-200 bg-emerald-50 p-5 text-center shadow-sm sm:w-[220px]">
+      <img
+        src={row.foto || avatarPlaceholder(row.nama || row.jabatan)}
+        alt={row.nama || row.jabatan}
+        className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-green-200"
+      />
+      <p className="mt-5 text-sm font-medium text-green-700">
+        {row.jabatan}
+      </p>
+      <h3 className="mt-2 text-lg font-semibold text-green-950">
+        {row.nama || '-'}
+      </h3>
+    </article>
   );
 }
 

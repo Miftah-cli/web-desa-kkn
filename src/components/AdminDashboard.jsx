@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import PengurusManager from './PengurusManager';
+import ProfilManager from './ProfilManager';
 import UMKMManager from './UMKMManager';
 
 const tabs = [
   { id: 'pengurus', label: 'Kelola Pengurus' },
   { id: 'umkm', label: 'Kelola UMKM' },
+  { id: 'profil', label: 'Profil Desa' },
 ];
 
 export default function AdminDashboard() {
@@ -71,6 +73,7 @@ export default function AdminDashboard() {
         <div className="mx-auto max-w-6xl">
           {activeTab === 'pengurus' && <PengurusManager />}
           {activeTab === 'umkm' && <UMKMManager />}
+          {activeTab === 'profil' && <ProfilManager />}
         </div>
       </main>
     </div>

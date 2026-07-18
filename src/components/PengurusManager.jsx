@@ -19,6 +19,31 @@ function compareJabatan(a, b) {
   return jabatanOptions.indexOf(a.jabatan) - jabatanOptions.indexOf(b.jabatan);
 }
 
+function extractFotoStoragePath(fotoUrl = '') {
+  if (!fotoUrl) return null;
+
+  try {
+    const url = new URL(fotoUrl);
+    const storagePathMarkers = [
+      '/storage/v1/object/public/foto_desa/',
+      '/storage/v1/object/sign/foto_desa/',
+    ];
+    const matchingMarker = storagePathMarkers.find((marker) =>
+      url.pathname.includes(marker)
+    );
+
+    if (!matchingMarker) {
+      return null;
+    }
+
+    const pathStart = url.pathname.indexOf(matchingMarker) + matchingMarker.length;
+
+    return decodeURIComponent(url.pathname.slice(pathStart));
+  } catch {
+    return null;
+  }
+}
+
 function normalizePengurusRows(rows = []) {
   const rowsByJabatan = new Map(
     rows
@@ -29,11 +54,11 @@ function normalizePengurusRows(rows = []) {
   return jabatanOptions.map(
     (jabatan) =>
       rowsByJabatan.get(jabatan) || {
+        id: null,
         jabatan,
         nama: '',
         alamat: '',
-        no_telp: '',
-        foto: '',
+        foto: null,
       }
   );
 }
@@ -48,7 +73,6 @@ export default function PengurusManager() {
   const [formData, setFormData] = useState({
     nama: '',
     alamat: '',
-    no_telp: '',
     foto: '',
   });
 
@@ -59,7 +83,7 @@ export default function PengurusManager() {
 
       const { data, error } = await supabase
         .from('pengurus')
-        .select('jabatan, nama, alamat, no_telp, foto');
+        .select('id, jabatan, nama, alamat, foto');
 
       if (error) {
         setError(error.message);
@@ -78,7 +102,6 @@ export default function PengurusManager() {
     setFormData({
       nama: row.nama || '',
       alamat: row.alamat || '',
-      no_telp: row.no_telp || '',
       foto: row.foto || '',
     });
     setFotoFile(null);
@@ -89,7 +112,6 @@ export default function PengurusManager() {
     setFormData({
       nama: '',
       alamat: '',
-      no_telp: '',
       foto: '',
     });
     setFotoFile(null);
@@ -106,7 +128,7 @@ export default function PengurusManager() {
 
   async function uploadFoto(file) {
     const fileExt = file.name.split('.').pop();
-    const fileName = `pengurus-${Date.now()}.${fileExt}`;
+    const fileName = `pengurus-${crypto.randomUUID()}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from('foto_desa')
@@ -149,12 +171,11 @@ export default function PengurusManager() {
           jabatan,
           nama: formData.nama,
           alamat: formData.alamat,
-          no_telp: formData.no_telp,
           foto: fotoUrl,
         },
         { onConflict: 'jabatan' }
       )
-      .select('jabatan, nama, alamat, no_telp, foto')
+      .select('id, jabatan, nama, alamat, foto')
       .single();
 
     if (error) {
@@ -168,6 +189,45 @@ export default function PengurusManager() {
       handleCancel();
     }
 
+    setSaving(false);
+  }
+
+  async function handleRemovePhoto(id, currentFotoUrl) {
+    setSaving(true);
+    setError('');
+
+    const fotoPath = extractFotoStoragePath(currentFotoUrl);
+
+    if (fotoPath) {
+      const { error: storageError } = await supabase.storage
+        .from('foto_desa')
+        .remove([fotoPath]);
+
+      if (storageError) {
+        setError(storageError.message);
+        setSaving(false);
+        return;
+      }
+    }
+
+    const { error } = await supabase
+      .from('pengurus')
+      .update({ foto: null })
+      .eq('id', id);
+
+    if (error) {
+      setError(error.message);
+      setSaving(false);
+      return;
+    }
+
+    setPengurus((currentPengurus) =>
+      currentPengurus.map((row) =>
+        row.id === id ? { ...row, foto: null } : row
+      )
+    );
+    setFormData((currentData) => ({ ...currentData, foto: null }));
+    setFotoFile(null);
     setSaving(false);
   }
 
@@ -263,19 +323,6 @@ export default function PengurusManager() {
 
                   <label className="block">
                     <span className="text-sm font-medium text-green-900">
-                      No. Telepon
-                    </span>
-                    <input
-                      type="text"
-                      name="no_telp"
-                      value={formData.no_telp}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm outline-none focus:border-green-700 focus:ring-2 focus:ring-green-100"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="text-sm font-medium text-green-900">
                       Foto Profil
                     </span>
                     <input
@@ -287,11 +334,21 @@ export default function PengurusManager() {
                       className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-900 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-green-900 hover:file:bg-emerald-200"
                     />
                     {formData.foto && (
-                      <img
-                        src={formData.foto}
-                        alt="Foto pengurus saat ini"
-                        className="mt-3 h-16 w-16 rounded-full object-cover ring-2 ring-green-100"
-                      />
+                      <div className="mt-3 flex items-center gap-3">
+                        <img
+                          src={formData.foto}
+                          alt="Foto pengurus saat ini"
+                          className="h-16 w-16 rounded-full object-cover ring-2 ring-green-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(row.id, formData.foto)}
+                          disabled={saving || !row.id}
+                          className="text-sm font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Hapus Foto
+                        </button>
+                      </div>
                     )}
                   </label>
 
@@ -326,12 +383,6 @@ export default function PengurusManager() {
                     <dt className="font-medium text-green-700">Alamat</dt>
                     <dd className="mt-1 text-green-950">
                       {row.alamat || '-'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-green-700">No. Telepon</dt>
-                    <dd className="mt-1 text-green-950">
-                      {row.no_telp || '-'}
                     </dd>
                   </div>
                 </dl>

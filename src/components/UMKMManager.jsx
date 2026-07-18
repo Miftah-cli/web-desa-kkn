@@ -4,10 +4,34 @@ import { supabase } from '../utils/supabaseClient';
 const emptyForm = {
   nama: '',
   alamat: '',
-  no_telp: '',
   deskripsi: '',
   foto: '',
 };
+
+function extractFotoStoragePath(fotoUrl = '') {
+  if (!fotoUrl) return null;
+
+  try {
+    const url = new URL(fotoUrl);
+    const storagePathMarkers = [
+      '/storage/v1/object/public/foto_desa/',
+      '/storage/v1/object/sign/foto_desa/',
+    ];
+    const matchingMarker = storagePathMarkers.find((marker) =>
+      url.pathname.includes(marker)
+    );
+
+    if (!matchingMarker) {
+      return null;
+    }
+
+    const pathStart = url.pathname.indexOf(matchingMarker) + matchingMarker.length;
+
+    return decodeURIComponent(url.pathname.slice(pathStart));
+  } catch {
+    return null;
+  }
+}
 
 export default function UMKMManager() {
   const [umkmList, setUmkmList] = useState([]);
@@ -27,7 +51,7 @@ export default function UMKMManager() {
 
       const { data, error } = await supabase
         .from('umkm')
-        .select('id, nama, alamat, no_telp, deskripsi, foto')
+        .select('id, nama, alamat, deskripsi, foto')
         .order('id', { ascending: true });
 
       if (error) {
@@ -104,11 +128,10 @@ export default function UMKMManager() {
       .insert({
         nama: formData.nama,
         alamat: formData.alamat,
-        no_telp: formData.no_telp,
         deskripsi: formData.deskripsi,
         foto: fotoUrl,
       })
-      .select('id, nama, alamat, no_telp, deskripsi, foto')
+      .select('id, nama, alamat, deskripsi, foto')
       .single();
 
     if (error) {
@@ -127,7 +150,6 @@ export default function UMKMManager() {
     setEditData({
       nama: row.nama || '',
       alamat: row.alamat || '',
-      no_telp: row.no_telp || '',
       deskripsi: row.deskripsi || '',
       foto: row.foto || '',
     });
@@ -161,12 +183,11 @@ export default function UMKMManager() {
       .update({
         nama: editData.nama,
         alamat: editData.alamat,
-        no_telp: editData.no_telp,
         deskripsi: editData.deskripsi,
         foto: fotoUrl,
       })
       .eq('id', id)
-      .select('id, nama, alamat, no_telp, deskripsi, foto')
+      .select('id, nama, alamat, deskripsi, foto')
       .single();
 
     if (error) {
@@ -181,6 +202,45 @@ export default function UMKMManager() {
     setSaving(false);
   }
 
+  async function handleRemovePhoto(id, currentFotoUrl) {
+    setSaving(true);
+    setError('');
+
+    const fotoPath = extractFotoStoragePath(currentFotoUrl);
+
+    if (fotoPath) {
+      const { error: storageError } = await supabase.storage
+        .from('foto_desa')
+        .remove([fotoPath]);
+
+      if (storageError) {
+        setError(storageError.message);
+        setSaving(false);
+        return;
+      }
+    }
+
+    const { error } = await supabase
+      .from('umkm')
+      .update({ foto: null })
+      .eq('id', id);
+
+    if (error) {
+      setError(error.message);
+      setSaving(false);
+      return;
+    }
+
+    setUmkmList((currentList) =>
+      currentList.map((row) =>
+        row.id === id ? { ...row, foto: null } : row
+      )
+    );
+    setEditData((currentData) => ({ ...currentData, foto: null }));
+    setEditFotoFile(null);
+    setSaving(false);
+  }
+
   async function handleDelete(id) {
     const shouldDelete = window.confirm('Hapus data UMKM ini?');
 
@@ -191,11 +251,25 @@ export default function UMKMManager() {
     setSaving(true);
     setError('');
 
+    const deletedRow = umkmList.find((row) => row.id === id);
+
     const { error } = await supabase.from('umkm').delete().eq('id', id);
 
     if (error) {
       setError(error.message);
     } else {
+      const fotoPath = extractFotoStoragePath(deletedRow?.foto);
+
+      if (fotoPath) {
+        const { error: storageError } = await supabase.storage
+          .from('foto_desa')
+          .remove([fotoPath]);
+
+        if (storageError) {
+          setError(storageError.message);
+        }
+      }
+
       setUmkmList((currentList) => currentList.filter((row) => row.id !== id));
       if (editingId === id) {
         handleCancelEdit();
@@ -239,19 +313,6 @@ export default function UMKMManager() {
               value={formData.nama}
               onChange={handleFormChange}
               required
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">
-              No. Telepon
-            </span>
-            <input
-              type="text"
-              name="no_telp"
-              value={formData.no_telp}
-              onChange={handleFormChange}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
             />
           </label>
@@ -319,11 +380,21 @@ export default function UMKMManager() {
                 {isEditing ? (
                   <div className="space-y-3">
                     {editData.foto && (
-                      <img
-                        src={editData.foto}
-                        alt={editData.nama || 'Foto UMKM'}
-                        className="h-28 w-full rounded-md object-cover"
-                      />
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={editData.foto}
+                          alt={editData.nama || 'Foto UMKM'}
+                          className="h-24 w-24 rounded-md object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(row.id, editData.foto)}
+                          disabled={saving}
+                          className="text-sm font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Hapus Foto
+                        </button>
+                      </div>
                     )}
 
                     <label className="block">
@@ -347,19 +418,6 @@ export default function UMKMManager() {
                         type="text"
                         name="alamat"
                         value={editData.alamat}
-                        onChange={handleEditChange}
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="text-sm font-medium text-slate-700">
-                        No. Telepon
-                      </span>
-                      <input
-                        type="text"
-                        name="no_telp"
-                        value={editData.no_telp}
                         onChange={handleEditChange}
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                       />
@@ -427,9 +485,6 @@ export default function UMKMManager() {
                         <h3 className="text-lg font-semibold text-slate-900">
                           {row.nama}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {row.no_telp || '-'}
-                        </p>
                       </div>
 
                       <div className="flex shrink-0 gap-2">
