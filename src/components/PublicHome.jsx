@@ -15,6 +15,37 @@ const navLinks = [
   { href: '#potensi-lokal', label: 'Potensi' },
 ];
 
+const bottomNavLinks = [
+  {
+    href: '#beranda',
+    label: 'Beranda',
+    icon: (
+      <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5Z" />
+    ),
+  },
+  {
+    href: '#profil',
+    label: 'Profil',
+    icon: (
+      <path d="M4 20a8 8 0 0 1 16 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+    ),
+  },
+  {
+    href: '#pengurus',
+    label: 'Pengurus',
+    icon: (
+      <path d="M16 11a4 4 0 1 0-8 0M3 21a7 7 0 0 1 14 0M20 21a5 5 0 0 0-4-4.9M17 3.5a3.5 3.5 0 0 1 0 7" />
+    ),
+  },
+  {
+    href: '#umkm',
+    label: 'UMKM',
+    icon: (
+      <path d="M4 10h16l-1 11H5L4 10ZM7 10V7a5 5 0 0 1 10 0v3M8 14h.01M16 14h.01" />
+    ),
+  },
+];
+
 const heroImage = '/piji1.png';
 
 const umkmPlaceholderImage =
@@ -204,9 +235,9 @@ export default function PublicHome() {
   }, []);
 
   return (
-    <main className="min-h-screen scroll-smooth bg-emerald-50 text-green-950">
-      <header className="sticky top-0 z-50 border-b border-green-800/20 bg-green-900/95 text-white shadow-sm backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <main className="min-h-screen scroll-smooth bg-emerald-50 pb-16 text-green-950 md:pb-0">
+      <header className="sticky top-0 z-50 hidden border-b border-green-800/20 bg-green-900/95 text-white shadow-sm backdrop-blur md:block">
+        <div className="mx-auto hidden max-w-6xl flex-col gap-3 px-6 py-4 md:flex lg:flex-row lg:items-center lg:justify-between">
           <a href="#beranda" className="text-lg font-bold tracking-tight">
             Padukuhan Piji
           </a>
@@ -370,14 +401,14 @@ export default function PublicHome() {
             <ErrorState message={error} />
           ) : (
             <>
-              <div className="mt-10 space-y-6">
-                <div className="flex flex-wrap justify-center gap-5">
+                <div className="mt-10 space-y-6">
+                <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:flex-wrap md:justify-center md:gap-5 md:overflow-visible md:pb-0 md:snap-none">
                   {pimpinanPengurus.map((row) => (
                     <PengurusCard key={row.jabatan} row={row} />
                   ))}
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-5">
+                <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:flex-wrap md:justify-center md:gap-5 md:overflow-visible md:pb-0 md:snap-none">
                   {rtPengurus.map((row) => (
                     <PengurusCard key={row.jabatan} row={row} />
                   ))}
@@ -402,11 +433,11 @@ export default function PublicHome() {
             <ErrorState message={error} />
           ) : (
             <>
-              <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="no-scrollbar mt-10 flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:gap-6 md:overflow-visible md:pb-0 md:snap-none md:grid-cols-2 xl:grid-cols-3">
                 {visibleUmkm.map((item) => (
                   <article
                     key={item.id}
-                    className="flex min-h-full overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm"
+                    className="flex min-h-full w-[85%] max-w-[300px] shrink-0 snap-center overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm md:w-auto md:max-w-none md:shrink"
                   >
                     <div className="flex w-full flex-col">
                       <img
@@ -491,13 +522,40 @@ export default function PublicHome() {
           Admin Login
         </Link>
       </footer>
+
+      <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white shadow-lg md:hidden">
+        <div className="grid h-16 grid-cols-4">
+          {bottomNavLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="flex flex-col items-center justify-center gap-1 text-xs font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+              aria-label={link.label}
+            >
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {link.icon}
+              </svg>
+              <span>{link.label}</span>
+            </a>
+          ))}
+        </div>
+      </nav>
     </main>
   );
 }
 
 function PengurusCard({ row }) {
   return (
-    <article className="w-full max-w-[220px] rounded-lg border border-green-200 bg-emerald-50 p-5 text-center shadow-sm sm:w-[220px]">
+    <article className="w-[85%] max-w-[300px] shrink-0 snap-center rounded-lg border border-green-200 bg-emerald-50 p-5 text-center shadow-sm sm:w-[220px] md:w-full md:max-w-[220px] md:shrink">
       <img
         src={row.foto || avatarPlaceholder(row.nama || row.jabatan)}
         alt={row.nama || row.jabatan}
