@@ -19,6 +19,7 @@ const navLinks = [
 const bottomNavLinks = [
   {
     href: '#beranda',
+    sectionId: 'beranda',
     label: 'Beranda',
     icon: (
       <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5Z" />
@@ -33,6 +34,7 @@ const bottomNavLinks = [
   },
   {
     href: '#profil',
+    sectionId: 'profil',
     label: 'Profil',
     icon: (
       <path d="M4 20a8 8 0 0 1 16 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -40,6 +42,7 @@ const bottomNavLinks = [
   },
   {
     href: '#pengurus',
+    sectionId: 'pengurus',
     label: 'Pengurus',
     icon: (
       <path d="M16 11a4 4 0 1 0-8 0M3 21a7 7 0 0 1 14 0M20 21a5 5 0 0 0-4-4.9M17 3.5a3.5 3.5 0 0 1 0 7" />
@@ -47,6 +50,7 @@ const bottomNavLinks = [
   },
   {
     href: '#umkm',
+    sectionId: 'umkm',
     label: 'UMKM',
     icon: (
       <path d="M4 10h16l-1 11H5L4 10ZM7 10V7a5 5 0 0 1 10 0v3M8 14h.01M16 14h.01" />
@@ -55,6 +59,9 @@ const bottomNavLinks = [
 ];
 
 const heroImage = '/piji1.png';
+const bottomNavSectionIds = bottomNavLinks
+  .map((link) => link.sectionId)
+  .filter(Boolean);
 
 const umkmPlaceholderImage =
   'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80';
@@ -156,6 +163,7 @@ export default function PublicHome() {
   const [error, setError] = useState('');
   const [profileError, setProfileError] = useState('');
   const [showAllUmkm, setShowAllUmkm] = useState(false);
+  const [activeSection, setActiveSection] = useState('beranda');
 
   const jumlahJiwaValue = profileError
     ? 'Gagal memuat'
@@ -189,6 +197,44 @@ export default function PublicHome() {
 
     return () => {
       document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    };
+  }, []);
+
+  useEffect(() => {
+    function updateActiveSection() {
+      const scrollTarget = window.scrollY + window.innerHeight * 0.35;
+      const currentSection = bottomNavSectionIds.reduce((current, sectionId) => {
+        const section = document.getElementById(sectionId);
+
+        if (section && section.offsetTop <= scrollTarget) {
+          return sectionId;
+        }
+
+        return current;
+      }, 'beranda');
+
+      setActiveSection(currentSection);
+    }
+
+    function handleHashChange() {
+      const hashSection = window.location.hash.replace('#', '');
+
+      if (bottomNavSectionIds.includes(hashSection)) {
+        setActiveSection(hashSection);
+      }
+
+      window.requestAnimationFrame(updateActiveSection);
+    }
+
+    updateActiveSection();
+    window.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('resize', updateActiveSection);
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('scroll', updateActiveSection);
+      window.removeEventListener('resize', updateActiveSection);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
@@ -543,29 +589,41 @@ export default function PublicHome() {
 
       <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white shadow-lg md:hidden">
         <div className="grid h-16 grid-cols-5">
-          {bottomNavLinks.map((link) => (
-            link.to ? (
+          {bottomNavLinks.map((link) => {
+            const isActive = link.sectionId === activeSection;
+            const contentClassName = `flex min-w-[56px] flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 transition ${
+              isActive
+                ? 'bg-green-700 text-white'
+                : 'bg-transparent text-gray-600 group-hover:bg-emerald-50 group-hover:text-green-950'
+            }`;
+
+            return link.to ? (
               <Link
                 key={link.to}
                 to={link.to}
-                className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+                className="group flex items-center justify-center text-[11px] font-medium"
                 aria-label={link.label}
               >
-                <BottomNavIcon>{link.icon}</BottomNavIcon>
-                <span>{link.label}</span>
+                <span className={contentClassName}>
+                  <BottomNavIcon>{link.icon}</BottomNavIcon>
+                  <span>{link.label}</span>
+                </span>
               </Link>
             ) : (
               <a
                 key={link.href}
                 href={link.href}
-                className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+                className="group flex items-center justify-center text-[11px] font-medium"
                 aria-label={link.label}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <BottomNavIcon>{link.icon}</BottomNavIcon>
-                <span>{link.label}</span>
+                <span className={contentClassName}>
+                  <BottomNavIcon>{link.icon}</BottomNavIcon>
+                  <span>{link.label}</span>
+                </span>
               </a>
-            )
-          ))}
+            );
+          })}
         </div>
       </nav>
     </main>

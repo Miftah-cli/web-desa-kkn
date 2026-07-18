@@ -185,29 +185,41 @@ export default function Layanan() {
 
       <nav className="fixed bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white shadow-lg md:hidden">
         <div className="grid h-16 grid-cols-5">
-          {bottomNavLinks.map((link) =>
-            link.to ? (
+          {bottomNavLinks.map((link) => {
+            const isActive = link.to === '/layanan';
+            const contentClassName = `flex min-w-[56px] flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 transition ${
+              isActive
+                ? 'bg-green-700 text-white'
+                : 'bg-transparent text-gray-600 group-hover:bg-emerald-50 group-hover:text-green-950'
+            }`;
+
+            return link.to ? (
               <Link
                 key={link.to}
                 to={link.to}
-                className="flex flex-col items-center justify-center gap-1 bg-emerald-50 text-[11px] font-medium text-green-950"
+                className="group flex items-center justify-center text-[11px] font-medium"
                 aria-label={link.label}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <NavIcon>{link.icon}</NavIcon>
-                <span>{link.label}</span>
+                <span className={contentClassName}>
+                  <NavIcon>{link.icon}</NavIcon>
+                  <span>{link.label}</span>
+                </span>
               </Link>
             ) : (
               <a
                 key={link.href}
                 href={link.href}
-                className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-green-800 transition hover:bg-emerald-50 hover:text-green-950"
+                className="group flex items-center justify-center text-[11px] font-medium"
                 aria-label={link.label}
               >
-                <NavIcon>{link.icon}</NavIcon>
-                <span>{link.label}</span>
+                <span className={contentClassName}>
+                  <NavIcon>{link.icon}</NavIcon>
+                  <span>{link.label}</span>
+                </span>
               </a>
-            )
-          )}
+            );
+          })}
         </div>
       </nav>
     </main>
