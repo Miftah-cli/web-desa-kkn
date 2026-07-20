@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import {
+  createPotensiId,
+  normalizePotensiItems,
+} from '../utils/potensiDefaults';
 import { supabase } from '../utils/supabaseClient';
 
 const emptyForm = {
@@ -6,12 +10,29 @@ const emptyForm = {
   luas_wilayah: '',
 };
 
+const emptyPotensiForm = {
+  id: '',
+  nama: '',
+  deskripsi: '',
+  gambar: '',
+};
+
 export default function ProfilManager() {
   const [formData, setFormData] = useState(emptyForm);
+  const [initialFormData, setInitialFormData] = useState(emptyForm);
+  const [potensiItems, setPotensiItems] = useState([]);
+  const [potensiForm, setPotensiForm] = useState(emptyPotensiForm);
+  const [potensiImageFile, setPotensiImageFile] = useState(null);
+  const [editingPotensiId, setEditingPotensiId] = useState(null);
+  const [isPotensiFormOpen, setIsPotensiFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPotensi, setSavingPotensi] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const isProfileDirty =
+    formData.jumlah_jiwa !== initialFormData.jumlah_jiwa ||
+    formData.luas_wilayah !== initialFormData.luas_wilayah;
 
   useEffect(() => {
     async function fetchProfil() {
@@ -20,17 +41,21 @@ export default function ProfilManager() {
 
       const { data, error } = await supabase
         .from('profil_desa')
-        .select('jumlah_jiwa, luas_wilayah')
+        .select('jumlah_jiwa, luas_wilayah, potensi_lokal')
         .eq('id', 1)
         .single();
 
       if (error) {
         setError(error.message);
       } else {
-        setFormData({
+        const fetchedFormData = {
           jumlah_jiwa: data?.jumlah_jiwa || '',
           luas_wilayah: data?.luas_wilayah || '',
-        });
+        };
+
+        setFormData(fetchedFormData);
+        setInitialFormData(fetchedFormData);
+        setPotensiItems(normalizePotensiItems(data?.potensi_lokal));
       }
 
       setLoading(false);
@@ -46,10 +71,179 @@ export default function ProfilManager() {
       ...currentData,
       [name]: value,
     }));
+    setSuccess('');
+  }
+
+  function handlePotensiChange(event) {
+    const { name, value } = event.target;
+
+    setPotensiForm((currentData) => ({
+      ...currentData,
+      [name]: value,
+    }));
+    setSuccess('');
+  }
+
+  function handleAddPotensi() {
+    setEditingPotensiId(null);
+    setPotensiForm(emptyPotensiForm);
+    setPotensiImageFile(null);
+    setIsPotensiFormOpen(true);
+    setError('');
+    setSuccess('');
+  }
+
+  function handleEditPotensi(item) {
+    setEditingPotensiId(item.id);
+    setPotensiForm({
+      id: item.id,
+      nama: item.nama || '',
+      deskripsi: item.deskripsi || '',
+      gambar: item.gambar || '',
+    });
+    setPotensiImageFile(null);
+    setIsPotensiFormOpen(true);
+    setError('');
+    setSuccess('');
+  }
+
+  function handleCancelPotensiForm() {
+    setEditingPotensiId(null);
+    setPotensiForm(emptyPotensiForm);
+    setPotensiImageFile(null);
+    setIsPotensiFormOpen(false);
+  }
+
+  async function uploadPotensiImage(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `potensi-${crypto.randomUUID()}.${fileExt}`;
+
+    const { error } = await supabase.storage
+      .from('foto_desa')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('foto_desa').getPublicUrl(fileName);
+
+    return publicUrl;
+  }
+
+  async function savePotensiItems(nextItems, successMessage) {
+    const cleanedItems = normalizePotensiItems(nextItems).map((item) => ({
+      id: item.id,
+      nama: item.nama,
+      deskripsi: item.deskripsi,
+      gambar: item.gambar,
+    }));
+
+    const { data, error } = await supabase
+      .from('profil_desa')
+      .update({ potensi_lokal: cleanedItems })
+      .eq('id', 1)
+      .select('potensi_lokal')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    setPotensiItems(normalizePotensiItems(data?.potensi_lokal));
+    setSuccess(successMessage);
+  }
+
+  async function handleApplyPotensiForm(event) {
+    event.preventDefault();
+
+    if (!potensiForm.nama.trim()) {
+      setError('Nama Potensi wajib diisi.');
+      return;
+    }
+
+    setSavingPotensi(true);
+    setError('');
+    setSuccess('');
+
+    let gambarUrl = potensiForm.gambar;
+
+    try {
+      if (potensiImageFile) {
+        gambarUrl = await uploadPotensiImage(potensiImageFile);
+      }
+    } catch (uploadError) {
+      setError(uploadError.message);
+      setSavingPotensi(false);
+      return;
+    }
+
+    const nextItem = {
+      id: potensiForm.id || createPotensiId(),
+      nama: potensiForm.nama.trim(),
+      deskripsi: potensiForm.deskripsi.trim(),
+      gambar: gambarUrl,
+    };
+
+    const nextItems = editingPotensiId
+      ? potensiItems.map((item) =>
+          item.id === editingPotensiId ? nextItem : item
+        )
+      : [...potensiItems, nextItem];
+
+    try {
+      await savePotensiItems(
+        nextItems,
+        editingPotensiId
+          ? 'Potensi lokal berhasil diperbarui.'
+          : 'Potensi lokal berhasil ditambahkan.'
+      );
+      handleCancelPotensiForm();
+    } catch (saveError) {
+      setError(saveError.message);
+    }
+
+    setSavingPotensi(false);
+  }
+
+  async function handleDeletePotensi(id) {
+    const shouldDelete = window.confirm('Hapus Potensi lokal ini?');
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setSavingPotensi(true);
+    setError('');
+    setSuccess('');
+
+    const nextItems = potensiItems.filter((item) => item.id !== id);
+
+    try {
+      await savePotensiItems(nextItems, 'Potensi lokal berhasil dihapus.');
+
+      if (editingPotensiId === id) {
+        handleCancelPotensiForm();
+      }
+    } catch (saveError) {
+      setError(saveError.message);
+    }
+
+    setSavingPotensi(false);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!isProfileDirty) {
+      return;
+    }
+
     setSaving(true);
     setError('');
     setSuccess('');
@@ -67,10 +261,13 @@ export default function ProfilManager() {
     if (error) {
       setError(error.message);
     } else {
-      setFormData({
+      const savedFormData = {
         jumlah_jiwa: data?.jumlah_jiwa || '',
         luas_wilayah: data?.luas_wilayah || '',
-      });
+      };
+
+      setFormData(savedFormData);
+      setInitialFormData(savedFormData);
       setSuccess('Profil desa berhasil disimpan.');
     }
 
@@ -92,7 +289,7 @@ export default function ProfilManager() {
           Profil Desa
         </h2>
         <p className="mt-1 text-sm text-green-700">
-          Kelola angka penduduk dan luas wilayah yang tampil di halaman publik.
+          Kelola angka penduduk, luas wilayah, dan Potensi lokal yang tampil di halaman publik.
         </p>
       </div>
 
@@ -108,48 +305,228 @@ export default function ProfilManager() {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-2xl rounded-lg border border-green-200 bg-white p-5 shadow-sm"
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium text-green-900">
-              Jumlah Jiwa
-            </span>
-            <input
-              type="text"
-              name="jumlah_jiwa"
-              value={formData.jumlah_jiwa}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
-              placeholder="Contoh: 347"
-            />
-          </label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="w-full max-w-2xl rounded-lg border border-green-200 bg-white p-5 shadow-sm">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm font-medium text-green-900">
+                Jumlah Jiwa
+              </span>
+              <input
+                type="text"
+                name="jumlah_jiwa"
+                value={formData.jumlah_jiwa}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                placeholder="Contoh: 347"
+              />
+            </label>
 
-          <label className="block">
-            <span className="text-sm font-medium text-green-900">
-              Luas Wilayah
-            </span>
-            <input
-              type="text"
-              name="luas_wilayah"
-              value={formData.luas_wilayah}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
-              placeholder="Contoh: 90,2409"
-            />
-          </label>
+            <label className="block">
+              <span className="text-sm font-medium text-green-900">
+                Luas Wilayah
+              </span>
+              <input
+                type="text"
+                name="luas_wilayah"
+                value={formData.luas_wilayah}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                placeholder="Contoh: 90,2409"
+              />
+            </label>
+          </div>
         </div>
 
         <button
           type="submit"
-          disabled={saving}
-          className="mt-5 w-full rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300 sm:w-auto"
+          disabled={saving || !isProfileDirty}
+          className="w-full rounded-md bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300 sm:w-auto"
         >
           {saving ? 'Menyimpan...' : 'Simpan'}
         </button>
       </form>
+
+        <div className="space-y-4 rounded-lg border border-green-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-green-950">
+                Potensi Lokal
+              </h3>
+              <p className="mt-1 text-sm text-green-700">
+                Tambah, edit, dan hapus data Potensi yang tersimpan di kolom JSONB potensi_lokal.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddPotensi}
+              className="w-full rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 sm:w-auto"
+            >
+              Tambah Potensi
+            </button>
+          </div>
+
+          {isPotensiFormOpen && (
+            <form
+              onSubmit={handleApplyPotensiForm}
+              className="rounded-lg border border-emerald-200 bg-emerald-50 p-4"
+            >
+              <div className="mb-4 flex flex-col gap-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                  {editingPotensiId ? 'Edit Potensi' : 'Tambah Potensi'}
+                </p>
+                <h4 className="text-lg font-semibold text-green-950">
+                  {editingPotensiId ? potensiForm.nama || 'Potensi' : 'Potensi Baru'}
+                </h4>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium text-green-900">
+                    Nama
+                  </span>
+                  <input
+                    type="text"
+                    name="nama"
+                    value={potensiForm.nama}
+                    onChange={handlePotensiChange}
+                    className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                    placeholder="Contoh: Hasil Bumi"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-green-900">
+                    Gambar
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setPotensiImageFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-900 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-green-900 hover:file:bg-emerald-200"
+                  />
+                  {potensiImageFile && (
+                    <p className="mt-2 text-xs text-green-700">
+                      File dipilih: {potensiImageFile.name}
+                    </p>
+                  )}
+                </label>
+
+                <label className="block lg:col-span-2">
+                  <span className="text-sm font-medium text-green-900">
+                    Deskripsi
+                  </span>
+                  <textarea
+                    name="deskripsi"
+                    value={potensiForm.deskripsi}
+                    onChange={handlePotensiChange}
+                    rows="4"
+                    className="mt-1 w-full rounded-md border border-green-200 px-3 py-2 text-sm text-green-950 outline-none transition placeholder:text-green-900/40 focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                    placeholder="Tulis deskripsi Potensi lokal"
+                  />
+                </label>
+              </div>
+
+              {potensiForm.gambar && (
+                <img
+                  src={potensiForm.gambar}
+                  alt={potensiForm.nama || 'Preview Potensi'}
+                  className="mt-4 h-40 w-full rounded-md object-cover sm:w-72"
+                />
+              )}
+
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={savingPotensi}
+                  className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-300"
+                >
+                  {savingPotensi
+                    ? 'Mengunggah...'
+                    : editingPotensiId
+                      ? 'Simpan Perubahan'
+                      : 'Tambah Potensi'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelPotensiForm}
+                  disabled={savingPotensi}
+                  className="rounded-md border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-800 transition hover:bg-emerald-50"
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
+          )}
+
+          {potensiItems.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-green-200 bg-emerald-50/60 p-6 text-center">
+              <p className="text-sm font-medium text-green-950">
+                Belum ada Potensi lokal.
+              </p>
+              <p className="mt-1 text-sm text-green-700">
+                Klik Tambah Potensi untuk membuat item pertama.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {potensiItems.map((item) => (
+                <article
+                  key={item.id}
+                  className="overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm"
+                >
+                  {item.gambar ? (
+                    <img
+                      src={item.gambar}
+                      alt={item.nama}
+                      className="h-44 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-44 items-center justify-center bg-emerald-50 text-sm font-medium text-green-700">
+                      Gambar belum diisi
+                    </div>
+                  )}
+
+                  <div className="p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                          Potensi Lokal
+                        </p>
+                        <h4 className="mt-1 text-lg font-semibold text-green-950">
+                          {item.nama || 'Tanpa Nama'}
+                        </h4>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditPotensi(item)}
+                          disabled={savingPotensi}
+                          className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-green-800"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePotensi(item.id)}
+                          disabled={savingPotensi}
+                          className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-green-900">
+                      {item.deskripsi || 'Deskripsi belum diisi.'}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
     </section>
   );
 }

@@ -26,6 +26,12 @@ const layananItems = [
     requirements:
       'Syarat sementara: Surat keterangan lahir, fotocopy KK, fotocopy KTP orang tua, fotocopy buku nikah/akta perkawinan orang tua, dan data saksi sesuai ketentuan administrasi yang berlaku.',
   },
+  {
+    title: 'Akta Kematian',
+    image: '/poster/aktamati.webp',
+    requirements:
+      'Syarat sementara: Surat keterangan kematian dari dokter/rumah sakit atau desa, fotocopy KK, fotocopy KTP almarhum, fotocopy KTP pelapor, dan data saksi sesuai ketentuan administrasi yang berlaku.',
+  },
 ];
 
 const navLinks = [

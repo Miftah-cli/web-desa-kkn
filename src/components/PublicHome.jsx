@@ -1,5 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  normalizePotensiItems,
+} from '../utils/potensiDefaults';
 import { supabase } from '../utils/supabaseClient';
 
 const staticPadukuhanStats = [
@@ -65,21 +68,6 @@ const bottomNavSectionIds = bottomNavLinks
 
 const umkmPlaceholderImage =
   'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80';
-
-const localPotentials = [
-  {
-    title: 'Hasil Bumi',
-    image: '/hasilbumi.webp',
-    description:
-      'Hamparan sawah, tanaman padi, kebun bambu, dan hasil pertanian warga menjadi kekuatan utama Padukuhan Piji.',
-  },
-  {
-    title: 'Karawitan',
-    image: '/karawitan.webp',
-    description:
-      'Karawitan terus dirawat melalui kegiatan warga, latihan kelompok seni, dan agenda budaya padukuhan.',
-  },
-];
 
 const jabatanOptions = [
   'Dukuh',
@@ -159,6 +147,7 @@ export default function PublicHome() {
     jumlah_jiwa: '',
     luas_wilayah: '',
   });
+  const [potensiItems, setPotensiItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -255,7 +244,7 @@ export default function PublicHome() {
           .order('id', { ascending: true }),
         supabase
           .from('profil_desa')
-          .select('jumlah_jiwa, luas_wilayah')
+          .select('jumlah_jiwa, luas_wilayah, potensi_lokal')
           .eq('id', 1)
           .single(),
       ]);
@@ -274,12 +263,37 @@ export default function PublicHome() {
       }
 
       if (profilResult.error) {
-        setProfileError(profilResult.error.message);
+        const shouldRetryWithoutPotensi =
+          profilResult.error.message?.includes('potensi_lokal') ||
+          profilResult.error.message?.includes('schema cache');
+
+        if (shouldRetryWithoutPotensi) {
+          const { data, error } = await supabase
+            .from('profil_desa')
+            .select('jumlah_jiwa, luas_wilayah')
+            .eq('id', 1)
+            .single();
+
+          if (error) {
+            setProfileError(error.message);
+          } else {
+            setProfilDesa({
+              jumlah_jiwa: data?.jumlah_jiwa || '',
+              luas_wilayah: data?.luas_wilayah || '',
+            });
+            setPotensiItems([]);
+          }
+        } else {
+          setProfileError(profilResult.error.message);
+        }
       } else {
         setProfilDesa({
           jumlah_jiwa: profilResult.data?.jumlah_jiwa || '',
           luas_wilayah: profilResult.data?.luas_wilayah || '',
         });
+        setPotensiItems(
+          normalizePotensiItems(profilResult.data?.potensi_lokal)
+        );
       }
 
       setLoading(false);
@@ -552,28 +566,40 @@ export default function PublicHome() {
             description="Alam yang subur dan tradisi yang hidup menjadi kekuatan bersama masyarakat."
           />
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            {localPotentials.map((item) => (
+          {potensiItems.length === 0 ? (
+            <div className="mt-10 rounded-lg border border-green-200 bg-emerald-50 p-6 text-sm text-green-900">
+              Data Potensi lokal belum tersedia.
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              {potensiItems.map((item) => (
               <article
-                key={item.title}
+                key={item.id}
                 className="overflow-hidden rounded-lg border border-green-200 bg-emerald-50 shadow-sm"
               >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="h-64 w-full object-cover"
-                />
+                {item.gambar ? (
+                  <img
+                    src={item.gambar}
+                    alt={item.nama || 'Potensi lokal'}
+                    className="h-64 w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-64 items-center justify-center bg-emerald-100 text-sm font-medium text-green-700">
+                    Gambar belum tersedia
+                  </div>
+                )}
                 <div className="p-6">
                   <h3 className="text-2xl font-semibold text-green-950">
-                    {item.title}
+                    {item.nama || 'Potensi Lokal'}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-green-900">
-                    {item.description}
+                    {item.deskripsi || 'Deskripsi belum tersedia.'}
                   </p>
                 </div>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

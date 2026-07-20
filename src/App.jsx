@@ -6,6 +6,7 @@ import Layanan from './components/Layanan';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicHome from './components/PublicHome';
+import ScrollToTop from './components/ScrollToTop';
 
 function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppRoutes />
       <ScrollToTopButton />
       <Footer />
