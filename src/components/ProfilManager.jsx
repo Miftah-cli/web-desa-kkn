@@ -620,18 +620,6 @@ export default function ProfilManager() {
                         >
                           Edit
                         </button>
-                        {item.gambar && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleRemovePotensiImage(item.id, item.gambar)
-                            }
-                            disabled={savingPotensi}
-                            className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            Hapus Gambar
-                          </button>
-                        )}
                         <button
                           type="button"
                           onClick={() => handleOpenDeleteModal(item)}
