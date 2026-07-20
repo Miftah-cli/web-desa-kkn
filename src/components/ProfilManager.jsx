@@ -370,7 +370,7 @@ export default function ProfilManager() {
                 Potensi Lokal
               </h3>
               <p className="mt-1 text-sm text-green-700">
-                Tambah, edit, dan hapus data Potensi Lokal.
+                Tambah, edit, dan hapus data Potensi Lokal
               </p>
             </div>
             <button
