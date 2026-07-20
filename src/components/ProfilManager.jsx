@@ -25,6 +25,8 @@ export default function ProfilManager() {
   const [potensiImageFile, setPotensiImageFile] = useState(null);
   const [editingPotensiId, setEditingPotensiId] = useState(null);
   const [isPotensiFormOpen, setIsPotensiFormOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPotensi, setSavingPotensi] = useState(false);
@@ -112,6 +114,18 @@ export default function ProfilManager() {
     setPotensiForm(emptyPotensiForm);
     setPotensiImageFile(null);
     setIsPotensiFormOpen(false);
+  }
+
+  function handleOpenDeleteModal(item) {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+    setError('');
+    setSuccess('');
+  }
+
+  function handleCloseDeleteModal() {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
   }
 
   async function uploadPotensiImage(file) {
@@ -211,25 +225,27 @@ export default function ProfilManager() {
     setSavingPotensi(false);
   }
 
-  async function handleDeletePotensi(id) {
-    const shouldDelete = window.confirm('Hapus Potensi lokal ini?');
-
-    if (!shouldDelete) {
+  async function handleConfirmDeletePotensi() {
+    if (!itemToDelete) {
       return;
     }
+
+    const deletingId = itemToDelete.id;
 
     setSavingPotensi(true);
     setError('');
     setSuccess('');
 
-    const nextItems = potensiItems.filter((item) => item.id !== id);
+    const nextItems = potensiItems.filter((item) => item.id !== deletingId);
 
     try {
       await savePotensiItems(nextItems, 'Potensi lokal berhasil dihapus.');
 
-      if (editingPotensiId === id) {
+      if (editingPotensiId === deletingId) {
         handleCancelPotensiForm();
       }
+
+      handleCloseDeleteModal();
     } catch (saveError) {
       setError(saveError.message);
     }
@@ -510,7 +526,7 @@ export default function ProfilManager() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeletePotensi(item.id)}
+                          onClick={() => handleOpenDeleteModal(item)}
                           disabled={savingPotensi}
                           className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
@@ -527,6 +543,44 @@ export default function ProfilManager() {
             </div>
           )}
         </div>
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <div className="w-full max-w-md rounded-lg border border-red-100 bg-white p-6 shadow-xl">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
+                Konfirmasi Hapus
+              </p>
+              <h3 className="text-xl font-semibold text-green-950">
+                Apakah Anda yakin ingin menghapus potensi ini?
+              </h3>
+              <p className="text-sm leading-6 text-green-700">
+                {itemToDelete?.nama
+                  ? `${itemToDelete.nama} akan dihapus dari daftar Potensi lokal.`
+                  : 'Data Potensi lokal yang dipilih akan dihapus.'}
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                disabled={savingPotensi}
+                className="rounded-md border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-800 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeletePotensi}
+                disabled={savingPotensi}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+              >
+                {savingPotensi ? 'Menghapus...' : 'Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
