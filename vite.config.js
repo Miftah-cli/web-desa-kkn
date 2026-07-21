@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/],
+      },
       manifest: {
         name: 'Padukuhan Piji',
         short_name: 'Piji',
